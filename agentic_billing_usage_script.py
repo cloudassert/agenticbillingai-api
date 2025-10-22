@@ -1170,7 +1170,7 @@ def display_daily_usage_data(data, from_date, to_date, allow_export=False):
 
     for day in sorted(by_day.keys()):
         records = by_day[day]
-        total_qty = sum((r.get('totalQuantity') or 0) for r in records)
+        total_qty = sum((r.get('quantity') or 0) for r in records)
         print(f"\n📅 {day}")
         print(f"   Total Records: {len(records)}")
         print(f"   Total Quantity: {total_qty:,.2f}")
@@ -1179,7 +1179,7 @@ def display_daily_usage_data(data, from_date, to_date, allow_export=False):
         services = {}
         for r in records:
             svc = r.get('service', 'Unknown')
-            services[svc] = services.get(svc, 0) + (r.get('totalQuantity') or 0)
+            services[svc] = services.get(svc, 0) + (r.get('quantity') or 0)
 
         for svc, qty in sorted(services.items(), key=lambda x: x[1], reverse=True)[:3]:
             print(f"     - {svc}: {qty:,.2f}")
@@ -1297,16 +1297,41 @@ def display_monthly_summary_data(data, allow_export=False):
         input("\nPress Enter to continue...")
         return
 
+    # Group by month, then by tenant
+    by_month = {}
     total_cost = 0
 
     for item in items:
-        month = item.get('usageMonth', 'Unknown')
-        cost = item.get('totalCost') or 0
+        month = item.get('usageMonth', item.get('month', 'Unknown'))
+        tenant = item.get('tenantId', 'N/A')
+        cost = item.get('totalCost') or item.get('cost') or 0
+        currency = item.get('currency', 'USD')
+
         total_cost += cost
 
+        if month not in by_month:
+            by_month[month] = []
+        by_month[month].append({
+            'tenant': tenant,
+            'cost': cost,
+            'currency': currency,
+            'item': item
+        })
+
+    # Display grouped by month
+    for month in sorted(by_month.keys()):
+        tenants = by_month[month]
+        month_total = sum(t['cost'] for t in tenants)
+
         print(f"\n📅 {month}")
-        print(f"   Total Cost: ${cost:>12,.4f}")
-        print(f"   Currency: {item.get('currency', 'USD')}")
+        print(f"   Month Total: ${month_total:>12,.4f}")
+        print(f"   Tenants: {len(tenants)}")
+        print("   " + "-"*66)
+
+        # Show each tenant
+        for t in sorted(tenants, key=lambda x: x['cost'], reverse=True):
+            tenant_label = t['tenant'] if t['tenant'] != 'N/A' else '(No Tenant)'
+            print(f"      {tenant_label:20s}  ${t['cost']:>12,.4f}  {t['currency']}")
 
     print("\n" + "="*70)
     print(f"💰 GRAND TOTAL: ${total_cost:,.4f}")
@@ -1340,14 +1365,16 @@ def display_monthly_service_summary_data(data, allow_export=False):
     total_cost = 0
 
     for item in items:
-        month = item.get('usageMonth', 'Unknown')
+        month = item.get('usageMonth', item.get('month', 'Unknown'))
         service = item.get('service', 'Unknown')
-        cost = item.get('totalCost') or 0
+        cost = item.get('totalCost') or item.get('cost') or 0
         total_cost += cost
 
         if month not in by_month:
             by_month[month] = {}
-        by_month[month][service] = cost
+        if service not in by_month[month]:
+            by_month[month][service] = 0
+        by_month[month][service] += cost
 
     for month in sorted(by_month.keys()):
         services = by_month[month]
