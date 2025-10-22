@@ -1,34 +1,45 @@
-# AgenticBilling.AI - Usage Data Submission Tool
+# AgenticBilling.AI Usage Data Submission & Reporting Tool
 
-A Python-based CLI tool for sending CloudEvents-compliant usage data to the AgenticBilling.AI API and viewing usage and cost reports.
+A comprehensive Python script for submitting usage data to and viewing reports from the AgenticBilling.AI platform using CloudEvents-compliant format.
 
-## Features
+## 📋 Table of Contents
 
-- **Send Usage Data**: Submit various types of usage events to AgenticBilling.AI
-  - Basic Compute Usage
-  - AI Chat Completion Usage
-  - Storage Usage
-  - SaaS API Usage
-  - SaaS Batch Processing
-  - Custom Usage Events
+- [Prerequisites](#prerequisites)
+- [Getting Your API Key](#getting-your-api-key)
+- [Installation](#installation)
+- [Running the Script](#running-the-script)
+- [Features](#features)
+- [Example Workflows](#example-workflows)
+- [Troubleshooting](#troubleshooting)
+- [Security Best Practices](#security-best-practices)
 
-- **View Reports**: Access comprehensive usage and cost data
-  - Hourly Usage Reports
-  - Daily Usage Reports (Date Range & Grouped)
-  - Daily Cost Reports
-  - Monthly Cost Summaries
-  - Monthly Cost by Service
+## Prerequisites
 
-- **Data Export**: Export reports to CSV or JSON format
+- **Python 3.7 or higher** installed on your system
+- **Network access** to the AgenticBilling.AI API endpoint
+- **API Key** for authentication (see below)
 
-- **Interactive Editing**: Modify usage events before submission with an intuitive editor
+**No additional libraries required** - the script uses only Python standard libraries.
 
-- **CloudEvents Compliant**: Follows CloudEvents v1.0 specification
+## Getting Your API Key
 
-## Requirements
+### Option 1: Use a Pre-Created API Key
 
-- Python 3.6 or higher
-- No external dependencies (uses only Python standard library)
+If you've already been provided with an API key:
+1. Keep it secure - treat it like a password
+2. Have it ready to paste when running the script
+3. The script will mask it for security (showing only the last 4 characters)
+
+### Option 2: Create a New API Key
+
+1. Log in to the AgenticBilling.AI platform at **https://app.agenticbilling.ai**
+2. Navigate to **Settings** → **API Keys**
+3. Click **Create New API Key**
+4. Give it a descriptive name (e.g., "Usage Submission Script")
+5. Copy the generated key immediately - **you won't be able to see it again**
+6. Store it securely (e.g., in a password manager)
+
+> **Note:** Each user should have their own API key. Never share keys between users.
 
 ## Installation
 
@@ -40,55 +51,52 @@ cd agenticbillingai-api
 
 2. The script uses only Python standard library modules, so no additional installation is needed.
 
-## Usage
+## Running the Script
 
-### Basic Usage
+### Basic Usage (Interactive Mode)
 
-Run the script:
 ```bash
 python agentic_billing_usage_script.py
 ```
 
 The script will prompt you for:
-- Base URL (defaults to `https://api.agenticbilling.ai`)
-- API Key (with masked input)
-- Provider name (defaults to `AgenticBilling.AI`)
+1. **Base URL** (defaults to `https://api.agenticbilling.ai`)
+2. **API Key** - Paste your API key 
 
-### Command Line Arguments
+### Advanced Usage (Command Line Arguments)
 
-You can also provide configuration via command-line arguments:
+Skip prompts by providing parameters on the command line:
 
 ```bash
-python agentic_billing_usage_script.py --base-url https://api.agenticbilling.ai --api-key YOUR_API_KEY --provider "YourProvider"
+python agentic_billing_usage_script.py --base-url https://api.agenticbilling.ai --api-key YOUR_API_KEY_HERE
 ```
 
-**Arguments:**
-- `--base-url`: Base URL for the API
-- `--api-key`: API Key for authentication
-- `--provider`: Provider name
+**Available Arguments:**
+- `--base-url` - API endpoint URL (default: https://api.agenticbilling.ai)
+- `--api-key` - Your API authentication key
+- `--provider` - Provider name (default: AgenticBilling.AI)
 
-## Features Overview
+## Features
 
-### 1. Send Usage Data
+### 📤 Send Usage Data
 
-Choose from pre-built templates or create custom usage events:
+Submit usage events to the AgenticBilling.AI platform with pre-built templates:
 
-- **Basic Compute Usage**: Track VM runtime and compute hours
-- **AI Chat Completion Usage**: Monitor AI model usage (tokens, requests)
-- **Storage Usage**: Track storage capacity and operations
-- **SaaS API Usage**: Monitor API requests and data transfer
-- **SaaS Batch Processing**: Track batch job usage credits
-- **Custom Usage Event**: Build your own usage event interactively
+1. **Basic Compute Usage** - Virtual machine runtime, compute hours
+2. **AI Chat Completion Usage** - LLM tokens, chat requests
+3. **Storage Usage** - Storage capacity, operations
+4. **SaaS API Usage** - API requests, data transfer
+5. **SaaS Batch Processing** - Batch jobs, credits
+6. **Custom Usage Event** - Create your own event with custom meters
 
-Each event can be:
-- Previewed before sending
-- Edited with an interactive editor
-- Sent to the API
-- Cancelled
+**Each template allows you to:**
+- Preview the event before sending
+- Edit any field values (service, quantities, tenant ID, etc.)
+- Cancel if needed
 
-### 2. View Usage & Cost Data
+### 📊 View Usage & Cost Data
 
-Access various reports:
+Query and analyze your usage and cost data with comprehensive reporting:
 
 - **Hourly Usage**: View usage for a specific hour
 - **Daily Usage (Date Range)**: See detailed daily usage across date ranges
@@ -109,76 +117,72 @@ Export any report data to:
 - **CSV format**: For spreadsheet analysis
 - **JSON format**: For programmatic processing
 
-## Usage Event Structure
+## Example Workflows
 
-All usage events follow the CloudEvents v1.0 specification with the following structure:
+### Workflow 1: Submit Test Usage Data
 
-```json
-{
-  "id": "01JKQXXXXXXXXXXXXXXXXXXX",
-  "specversion": "1.0",
-  "type": "ai.agenticbilling.usage.v1",
-  "source": "AgenticBilling.AI/usage",
-  "time": "2025-10-21T10:30:00Z",
-  "datacontenttype": "application/json",
-  "data": {
-    "id": "usage-XXXXXXXXXX",
-    "service": "ai.chat",
-    "operation": "chat.completion",
-    "resourceId": "/ai/models/gpt-4",
-    "usageStart": "2025-10-21T10:29:50Z",
-    "usageEnd": "2025-10-21T10:30:00Z",
-    "meters": [
-      {
-        "meterId": "chat.input_tokens",
-        "quantity": 1500,
-        "unit": "tokens"
-      }
-    ],
-    "dimensions": {
-      "model": "gpt-4",
-      "temperature": "0.7"
-    },
-    "tags": {
-      "project": "customer-support-bot",
-      "environment": "production"
-    },
-    "tenantId": "org/acme",
-    "userId": "user:42",
-    "projectId": "project/alpha"
-  }
-}
-```
-## Examples
+1. Run the script: `python agentic_billing_usage_script.py`
+2. Enter your API key when prompted
+3. Select **1** (Send Usage Data)
+4. Select **2** (AI Chat Completion Usage)
+5. Review the preview
+6. Type **e** to edit values like tenant ID, quantities, or service name
+7. Type **s** to send
+8. View the confirmation response
 
-### Example 1: Send AI Chat Usage
+### Workflow 2: Review Monthly Costs by Tenant
 
-```bash
-python agentic_billing_usage_script.py
-# Select "1. Send Usage Data"
-# Select "2. AI Chat Completion Usage"
-# Review the event
-# Type 's' to send or 'e' to edit
-```
+1. Run the script
+2. Enter your API key
+3. Select **2** (View Usage & Cost Data)
+4. Select **5** (Monthly Cost Summary)
+5. Enter date range (or press Enter for last 3 months)
+6. Review the breakdown showing:
+   - Each month's total cost
+   - List of tenants with their individual costs
+   - Grand total across all months
+7. Export to CSV if needed for further analysis
 
-### Example 2: View Monthly Costs
+### Workflow 3: Analyze Service Costs
 
-```bash
-python agentic_billing_usage_script.py
-# Select "2. View Usage & Cost Data"
-# Select "5. View Monthly Cost Summary"
-# Enter date range (e.g., "3" for 3 months ago)
-# Export to CSV if desired
-```
+1. Run the script
+2. Select **View Usage & Cost Data**
+3. Select **6** (Monthly Cost by Service)
+4. Enter date range
+5. Review which services are costing the most
+6. See percentage breakdown per service
+7. Export data for executive reporting
 
-### Example 3: Custom Usage Event
+### Workflow 4: Track Daily Usage Trends
 
-```bash
-python agentic_billing_usage_script.py
-# Select "1. Send Usage Data"
-# Select "6. Custom Usage Event"
-# Follow interactive prompts to build your event
-```
+1. Run the script
+2. Select **View Usage & Cost Data**
+3. Select **2** (Daily Usage - Date Range)
+4. Enter a week or month date range
+5. See daily trends and top services
+6. Export to CSV
+7. Open in Excel to create charts and visualizations
+
+## Editing Events Before Sending
+
+When submitting usage data, you can edit events before sending:
+
+### Quick Edit Mode
+- Quickly update common fields like service, tenant ID, user ID
+- Edit meter quantities
+- Streamlined interface for fast changes
+
+### Full Edit Mode
+- Navigate through entire event structure
+- Edit any field including nested objects and arrays
+- View full JSON representation
+- Make multiple changes before sending
+
+### Edit Options
+After previewing an event:
+- **(s)end** - Send the event as-is
+- **(e)dit** - Edit values before sending
+- **(c)ancel** - Cancel and return to main menu
 
 ## Data Fields
 
@@ -200,34 +204,116 @@ python agentic_billing_usage_script.py
 - `tenantId`: Tenant identifier
 - `userId`: User identifier
 - `projectId`: Project identifier
-
 ## Troubleshooting
 
-### API Key Issues
-- Ensure your API key is valid and has proper permissions
-- Check that the API key is correctly copied (no extra spaces)
+### Authentication Issues
+
+**"Invalid API Key" or "401 Unauthorized"**
+- Verify your API key is correct (check for copy/paste errors)
+- Ensure there are no extra spaces when pasting
+- Check that the key hasn't been revoked or expired
+- Confirm you're using the correct base URL
+- Try creating a new API key
 
 ### Connection Issues
-- Verify the base URL is correct
+
+**"Connection Error" or "URL Error"**
 - Check your internet connection
-- Ensure the API endpoint is accessible
+- Verify the base URL is correct (`https://api.agenticbilling.ai`)
+- Ensure your firewall allows outbound HTTPS connections
+- Check if a corporate proxy is required
+- Try accessing the API URL in a web browser
 
-### Date Format Issues
-- Use ISO 8601 format: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`
-- Or use relative dates: number of hours/days/months ago
+### Data Issues
 
-## License
+**"No Data Found" When Viewing Reports**
+- Verify the date range includes periods with usage data
+- Check that data has been successfully submitted first
+- Ensure you're querying the correct tenant/provider
+- Try expanding the date range
 
-MIT License
+**"Unexpected data format" Errors**
+- Report this to support with the error details
+- The API response format may have changed
 
-Copyright (c) 2025 CLOUD ASSERT LLC
+### Installation/Runtime Issues
 
-See [LICENSE](LICENSE) file for details.
+**"Python not found" or "Command not found"**
+- Verify Python is installed: `python --version` or `python3 --version`
+- Try `python3` instead of `python` on Mac/Linux
+- Install Python from https://www.python.org/downloads/
 
-## Support
+**Script won't start**
+- Ensure you're in the correct directory
+- Check file permissions: `chmod +x agentic_billing_usage_script.py` (Mac/Linux)
+- Try: `python -u agentic_billing_usage_script.py` to disable buffering
 
-For issues, questions, or contributions, please visit the project repository.
+## Event Structure Reference
 
-## Contributing
+All events follow the **CloudEvents v1.0** specification:
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```json
+{
+  "id": "01JKQ...",
+  "specversion": "1.0",
+  "type": "ai.agenticbilling.usage.v1",
+  "source": "AgenticBilling.AI/usage",
+  "time": "2025-01-17T10:30:00Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "id": "usage-001",
+    "service": "ai.chat",
+    "operation": "chat.completion",
+    "resourceId": "/ai/models/gpt-4",
+    "usageStart": "2025-01-17T09:30:00Z",
+    "usageEnd": "2025-01-17T10:30:00Z",
+    "meters": [
+      {
+        "meterId": "chat.input_tokens",
+        "quantity": 1500,
+        "unit": "tokens"
+      }
+    ],
+    "dimensions": {
+      "model": "gpt-4",
+      "region": "eastus"
+    },
+    "tags": {
+      "project": "customer-support"
+    },
+    "tenantId": "org/acme",
+    "userId": "user:123"
+  }
+}
+```
+
+## Integration Examples
+
+### Windows Batch File
+
+```batch
+@echo off
+python agentic_billing_usage_script.py ^
+  --base-url https://api.agenticbilling.ai ^
+  --api-key %AGENTIC_API_KEY%
+```
+
+### Bash Script (Linux/Mac)
+
+```bash
+#!/bin/bash
+python3 agentic_billing_usage_script.py \
+  --base-url https://api.agenticbilling.ai \
+  --api-key "$AGENTIC_API_KEY"
+```
+
+### PowerShell
+
+```powershell
+$env:AGENTIC_API_KEY = "your-api-key-here"
+python agentic_billing_usage_script.py `
+  --base-url https://api.agenticbilling.ai `
+  --api-key $env:AGENTIC_API_KEY
+```
+
+© 2025 AgenticBilling.AI - All Rights Reserved
